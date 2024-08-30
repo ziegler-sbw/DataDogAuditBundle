@@ -7,6 +7,7 @@ use DataDog\AuditBundle\Entity\AuditLog;
 use DataDog\AuditBundle\Entity\Association;
 
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -495,20 +496,13 @@ class AuditSubscriber implements EventSubscriber
         return null;
     }
 
-    private function getImpersonatorUserFromSecurityToken($token)
+
+    private function getImpersonatorUserFromSecurityToken( $token )
     {
-        if (false === $this->blameImpersonator) {
-            return null;
-        }
-        if(!$token instanceof TokenInterface) {
-            return null;
+        if( $this->blameImpersonator && $token instanceof SwitchUserToken ) {
+            return $token->getOriginalToken()->getUser();
         }
 
-        foreach ($this->getRoles($token) as $role) {
-            if ($role instanceof SwitchUserRole) {
-                return $role->getSource()->getUser();
-            }
-        }
         return null;
     }
 
